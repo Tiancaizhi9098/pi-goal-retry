@@ -1,0 +1,35 @@
+{
+  "name": "pi-goal-retry",
+  "version": "0.55.0-retry.1",
+  "description": "Pi goal completion with persistent bounded retries after upstream failures, based on @narumitw/pi-goal.",
+  "type": "module",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=22.19.0" },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Tiancaizhi9098/pi-goal-retry.git"
+  },
+  "homepage": "https://github.com/Tiancaizhi9098/pi-goal-retry#readme",
+  "keywords": ["pi-package", "pi-extension", "goal", "retry"],
+  "pi": { "extensions": ["./dist/index.ts"] },
+  "scripts": {
+    "build": "node scripts/build.mjs",
+    "test": "node --test test/*.test.mjs",
+    "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "@earendil-works/pi-ai": "*",
+    "@earendil-works/pi-coding-agent": "*",
+    "@earendil-works/pi-tui": "*",
+    "typebox": "*"
+  },
+  "dependencies": { "@narumitw/pi-tui-kit": "0.69.1" },
+  "devDependencies": {
+    "esbuild": "0.28.2",
+    "typescript": "^5.9.0",
+    "@types/node": "^24.0.0",
+    "@earendil-works/pi-coding-agent": "1.5.0"
+  },
+  "forkedFrom": { "package": "@narumitw/pi-goal", "version": "0.55.0", "repository": "https://github.com/narumiruna/pi-extensions" }
+}
