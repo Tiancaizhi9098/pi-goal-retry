@@ -5,7 +5,7 @@ import { tmpdir } from "node:os";
 import { resolve, sep } from "node:path";
 import { pathToFileURL } from "node:url";
 import { setImmediate as yieldImmediate } from "node:timers/promises";
-import { hostRoot, modules, root, jiti, truncation } from "./helpers.mjs";
+import { hostRoot, modules, root, jiti, truncation, geminiFilterText } from "./helpers.mjs";
 
 const sdk = await import(pathToFileURL(resolve(hostRoot,"dist/index.js")));
 const {AuthStorage} = await import(pathToFileURL(resolve(hostRoot,"dist/core/auth-storage.js")));
@@ -20,7 +20,7 @@ async function flushUntil(predicate) {
   assert.ok(predicate(),"Pi did not reach the expected settled state");
 }
 
-test("real Pi AgentSession automatically retries the exact Antigravity error and obeys pause", async t => {
+test("real Pi retries the pasted Gemini/Antigravity failure, respects pause, and enforces ten retries", async t => {
   const scratch = resolve(process.env.PI_GOAL_TEST_WORKDIR || tmpdir());
   await mkdir(scratch,{recursive:true});
   const temp = await mkdtemp(resolve(scratch,"pi-goal-retry-sdk-"));
@@ -49,11 +49,12 @@ test("real Pi AgentSession automatically retries the exact Antigravity error and
   assert.deepEqual(extensionsResult.errors,[]);
   let calls=0;
   let currentError=truncation;
+  let responseText=geminiFilterText;
   session.agent.streamFunction=()=>{
     calls++;
     const stream=ai.createAssistantMessageEventStream();
     queueMicrotask(()=>{
-      const message={role:"assistant",api:"openai-completions",provider:"local-retry-test",model:"mock",content:[],
+      const message={role:"assistant",api:"openai-completions",provider:"local-retry-test",model:"mock",content:responseText ? [{type:"text",text:responseText}] : [],
         stopReason:"error",errorMessage:currentError,timestamp:Date.now(),
         usage:{input:1,output:0,cacheRead:0,cacheWrite:0,totalTokens:1,cost:{input:0,output:0,cacheRead:0,cacheWrite:0,total:0}}};
       stream.push({type:"error",reason:"error",error:message});
@@ -80,6 +81,7 @@ test("real Pi AgentSession automatically retries the exact Antigravity error and
   // Exercise the host's real native retry loop as well as the fork's timer.
   settingsManager.setRetryEnabled(true);
   currentError="503 Service Unavailable";
+  responseText="";
   await session.prompt("/goal clear");
   await session.prompt("/goal Verify the shared retry cap with native Pi retries enabled");
   await flushUntil(()=>calls>2);
@@ -89,5 +91,20 @@ test("real Pi AgentSession automatically retries the exact Antigravity error and
   }
   await flushUntil(()=>currentGoal()?.status==="paused");
   assert.equal(calls,13,"initial request plus exactly ten retries; native retries must not multiply the allowance");
+  assert.equal(currentGoal().providerRetryFailures,11);
+
+  // Reproduce the complete pasted failure for an entire recovery allowance.
+  settingsManager.setRetryEnabled(false);
+  currentError=truncation;
+  responseText=geminiFilterText;
+  await session.prompt("/goal clear");
+  await session.prompt("/goal Verify bounded recovery of the pasted Gemini and Antigravity failure");
+  await flushUntil(()=>calls===14&&!!currentGoal()?.waiting?.providerError);
+  for(let tick=0;tick<80&&currentGoal()?.status==="active";tick++) {
+    t.mock.timers.tick(120_000);
+    await yieldImmediate();
+  }
+  await flushUntil(()=>currentGoal()?.status==="paused");
+  assert.equal(calls,24,"the pasted filter text must allow the initial request and ten retries");
   assert.equal(currentGoal().providerRetryFailures,11);
 });

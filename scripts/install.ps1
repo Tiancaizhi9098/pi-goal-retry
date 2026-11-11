@@ -9,6 +9,7 @@ $localRoot = Join-Path $agentRoot 'local'
 $targetRoot = [IO.Path]::GetFullPath((Join-Path $localRoot 'pi-goal-retry'))
 if ([IO.Path]::GetDirectoryName($targetRoot) -ne [IO.Path]::GetFullPath($localRoot)) { throw 'Invalid installation path.' }
 if (-not (Test-Path -LiteralPath (Join-Path $packageRoot 'dist\index.ts'))) { throw 'Build the package before installing.' }
+$packageInfo = Get-Content -LiteralPath (Join-Path $packageRoot 'package.json') -Raw | ConvertFrom-Json
 if ($targetRoot -eq $packageRoot) { throw 'Run this installer from the delivered source package.' }
 
 $settingsPath = Join-Path $agentRoot 'settings.json'
@@ -67,4 +68,4 @@ try {
     }
     throw
 }
-[pscustomobject]@{ Package = 'pi-goal-retry'; Version = '0.55.0-retry.1'; MaxRetries = $MaxRetries; InstalledAt = $targetRoot; Backup = $backupRoot; Next = 'In the current Pi session run /reload, then /goal resume.' } | ConvertTo-Json
+[pscustomobject]@{ Package = 'pi-goal-retry'; Version = $packageInfo.version; MaxRetries = $MaxRetries; InstalledAt = $targetRoot; Backup = $backupRoot; Next = 'In the current Pi session run /reload, then /goal resume.' } | ConvertTo-Json

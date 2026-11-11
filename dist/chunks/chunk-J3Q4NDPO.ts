@@ -927,11 +927,8 @@ function providerErrorDisposition(message) {
   if (isGoalContextOverflow(message)) return "context";
   if (isUsageLimitedGoalInterruption(message)) return "usage";
   const error = message.errorMessage ?? "";
-  const visible = (message.content ?? []).filter((part) => part.type === "text").map((part) => part.type === "text" ? part.text : "").join("\n");
-  const permanentError = /\b(?:401|403)\b|invalid[_ -]?api[_ -]?key|authentication (?:failed|required)|unauthorized|permission denied|invalid[_ -]?request|invalid argument|unsupported (?:model|parameter)|model (?:not found|does not exist)|\bcontent_filter\b|\b(?:SAFETY|PROHIBITED_CONTENT|BLOCKLIST)\b/i;
-  const explicitFilter = /this request was blocked by Gemini['’]s filters|blocked (?:by|due to) (?:the )?(?:safety|content) (?:filter|policy)|request (?:was )?rejected.{0,30}(?:safety|content policy)/i;
-  return permanentError.test(error) || explicitFilter.test(`${error}
-${visible}`) ? "permanent" : "retry";
+  const permanentError = /\b(?:401|403)\b|invalid[_ -]?api[_ -]?key|authentication (?:failed|required)|unauthorized|permission denied|invalid[_ -]?request|invalid argument|unsupported (?:model|parameter)|model (?:not found|does not exist)/i;
+  return permanentError.test(error) ? "permanent" : "retry";
 }
 function providerRetryDelay(settings, attempt) {
   return Math.min(settings.maxDelayMs, settings.baseDelayMs * 2 ** Math.min(30, Math.max(0, attempt - 1)));

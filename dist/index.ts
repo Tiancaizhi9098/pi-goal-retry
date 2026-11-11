@@ -45,7 +45,7 @@ import {
   transitionGoal,
   usageLimitScope,
   validateObjective
-} from "./chunks/chunk-6SEQOIMJ.ts";
+} from "./chunks/chunk-J3Q4NDPO.ts";
 import {
   DEFAULT_GOAL_SETTINGS,
   currentTokenTotal,
@@ -65,7 +65,7 @@ import {
 
 // src/command-registration.ts
 function registerGoalCommand(pi, runtime, commands, options = {}) {
-  const loadGoalManager = cachedModuleLoader(options.loadGoalManager ?? (() => import("./chunks/menu-Z2UKBB2S.ts")));
+  const loadGoalManager = cachedModuleLoader(options.loadGoalManager ?? (() => import("./chunks/menu-KJITNDTV.ts")));
   const loadGoalSettings = cachedModuleLoader(options.loadGoalSettings ?? (() => import("./chunks/settings-ui-VCH2FDEW.ts")));
   pi.registerCommand("goal", {
     description: "Run a goal to completion: /goal [--tokens 100k] <goal_to_complete>",

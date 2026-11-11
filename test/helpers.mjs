@@ -3,13 +3,15 @@ import { readFileSync } from "node:fs";
 import { dirname, resolve } from "node:path";
 import { fileURLToPath, pathToFileURL } from "node:url";
 
-export const root = resolve(dirname(fileURLToPath(import.meta.url)), "..");
+export const root = resolve(process.env.PI_GOAL_TEST_PACKAGE_ROOT || resolve(dirname(fileURLToPath(import.meta.url)), ".."));
 export const agentDir = process.env.PI_CODING_AGENT_DIR || resolve(process.env.USERPROFILE || process.env.HOME, ".pi/agent");
-let resolvedHostRoot;
-try { resolvedHostRoot = resolve(dirname(fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent"))), ".."); }
-catch {
-  const version = readFileSync(resolve(agentDir, "install/current-version"), "utf8").trim();
-  resolvedHostRoot = resolve(agentDir, "install/releases", version, "node_modules/@earendil-works/pi-coding-agent");
+let resolvedHostRoot = process.env.PI_GOAL_TEST_HOST_ROOT;
+if (!resolvedHostRoot) {
+  try { resolvedHostRoot = resolve(dirname(fileURLToPath(import.meta.resolve("@earendil-works/pi-coding-agent"))), ".."); }
+  catch {
+    const version = readFileSync(resolve(agentDir, "install/current-version"), "utf8").trim();
+    resolvedHostRoot = resolve(agentDir, "install/releases", version, "node_modules/@earendil-works/pi-coding-agent");
+  }
 }
 export const hostRoot = resolvedHostRoot;
 export const modules = resolve(hostRoot, "../..");
@@ -94,3 +96,4 @@ export function harness(t, restoredEntries = []) {
 }
 
 export const truncation = "Antigravity: the reply ended before it was complete";
+export const geminiFilterText = "This request was blocked by Gemini's filters. They can occasionally trigger by mistake on safe coding, security, or biology-related queries. Please try rephrasing your prompt. You can send feedback or read more about our policies here.";

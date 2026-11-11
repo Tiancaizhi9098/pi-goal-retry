@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import { resolve } from "node:path";
 import { pathToFileURL } from "node:url";
-import { harness, truncation, DEFAULT_GOAL_SETTINGS, normalizeGoalSettings, providerErrorDisposition,
+import { harness, truncation, geminiFilterText, DEFAULT_GOAL_SETTINGS, normalizeGoalSettings, providerErrorDisposition,
   providerRetryDelay, GoalCommandController, normalizeLoadedGoal, createGoal, root, hostRoot } from "./helpers.mjs";
 
 function clock(t) { t.mock.timers.enable({ apis: ["Date", "setTimeout"], now: 1_000_000 }); }
@@ -21,7 +21,18 @@ test("Antigravity truncation and unknown errors recover; permanent and quota fai
   assert.equal(providerErrorDisposition(error("")), "retry");
   assert.equal(providerErrorDisposition(error("401 Unauthorized")), "permanent");
   assert.equal(providerErrorDisposition(error("insufficient_quota")), "usage");
-  assert.equal(providerErrorDisposition(error(truncation, [{type:"text",text:"This request was blocked by Gemini's filters."}])), "permanent");
+  assert.equal(providerErrorDisposition(error(truncation, [{type:"text",text:geminiFilterText}])), "retry");
+});
+
+test("filter-tagged provider errors retain the bounded retry policy", () => {
+  for(const errorMessage of [geminiFilterText,"content_filter","SAFETY","PROHIBITED_CONTENT","BLOCKLIST"]) {
+    assert.equal(providerErrorDisposition({role:"assistant",stopReason:"error",errorMessage}),"retry");
+  }
+});
+
+test("assistant output cannot misclassify a premature-reply error as an authentication or request error", () => {
+  assert.equal(providerErrorDisposition({role:"assistant",stopReason:"error",errorMessage:truncation,
+    content:[{type:"text",text:"The UI displays 401 Unauthorized, permission denied and invalid request labels."}]}),"retry");
 });
 
 test("backoff grows from 10 seconds to a 120-second cap", () => {
@@ -49,13 +60,13 @@ test("ten consecutive retries are allowed; the eleventh failed response pauses a
   clock(t);
   const h = harness(t);
   for (let failures=1; failures<=10; failures++) {
-    await h.response(truncation);
+    await h.response(truncation,{content:[{type:"text",text:geminiFilterText}]});
     assert.equal(h.runtime.activeGoal.waiting.providerError.attempt, failures);
     t.mock.timers.tick(providerRetryDelay(h.runtime.settings.providerRetry, failures));
     assert.equal(h.sent.length, failures);
     h.runtime.continuationDelivery = undefined;
   }
-  await h.response(truncation);
+  await h.response(truncation,{content:[{type:"text",text:geminiFilterText}]});
   assert.equal(h.runtime.activeGoal.status, "paused");
   assert.equal(h.runtime.activeGoal.providerRetryFailures, 11);
   assert.ok(h.aborted > 0);
@@ -155,13 +166,18 @@ test("a token budget remains authoritative over retry recovery", async t => {
   assert.equal(h.sent.length,0);
 });
 
-test("explicit Gemini filter responses pause instead of being treated as a transport failure", async t => {
+test("the pasted Gemini filter text plus Antigravity failure schedules and dispatches a retry", async t => {
   clock(t);
   const h=harness(t);
-  await h.response(truncation,{content:[{type:"text",text:"This request was blocked by Gemini's filters."}]});
-  assert.equal(h.runtime.activeGoal.status,"paused");
-  t.mock.timers.tick(500_000);
+  await h.response(truncation,{content:[{type:"text",text:geminiFilterText}]});
+  assert.equal(h.runtime.activeGoal.status,"active");
+  assert.equal(h.runtime.activeGoal.waiting.providerError.attempt,1);
+  assert.ok(h.notifications.some(item=>item.message.includes("automatic retry 1/10 scheduled")));
+  t.mock.timers.tick(9_999);
   assert.equal(h.sent.length,0);
+  t.mock.timers.tick(1);
+  assert.equal(h.sent.length,1);
+  assert.equal(h.runtime.activeGoal.providerRetryFailures,1);
 });
 
 test("retry disabled retains upstream waiting behavior", async t => {
