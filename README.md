@@ -1,13 +1,13 @@
 # Pi Goal Retry
 
-基于 `@narumitw/pi-goal 0.55.0`，版本 `0.55.0-retry.2`。保留上游 MIT 许可和原有 `/goal`、任务完成证据、Token 预算、暂停、恢复、会话保存功能。支持 Pi。
+基于 `@narumitw/pi-goal 0.55.0`，版本 `0.55.0-retry.3`。保留上游 MIT 许可和原有 `/goal`、任务完成证据、Token 预算、暂停、恢复、会话保存功能。支持 Pi。
 
 这版解决的是：上游报出 `Antigravity: the reply ended before it was complete` 等未被 Pi 原生识别的请求错误时，Goal 不再无限等待手动输入，而会自动安排下一次请求。
 
 ## 默认行为
 
 - 一段连续失败中，初次请求之外最多重试 **10 次**。Pi 自身的原生重试也计入同一上限，不叠加成多层独立重试预算。
-- 新增恢复的退避间隔按重试序号计算：10 秒、20 秒、40 秒、80 秒，之后每次最多 120 秒。原生 Pi 重试仍使用它自己的较短间隔。
+- 新增恢复的每次重试固定等待 10 秒，连续失败也不会延长间隔。Windows 安装脚本同时把 Pi 原生重试设为固定 10 秒。
 - 成功得到一条模型响应后，连续失败计数归零；工具调用响应也属于成功响应。显式手动恢复会开启新一轮重试额度。
 - 自动重试共用 Goal 的持久化等待和单次派发机制，仅在 Pi 空闲且没有排队消息时触发。
 - `/goal pause` 会取消等待中的重试；`/goal clear`、目标替换、会话退出、预算耗尽也会使旧计时器失效。
@@ -49,12 +49,14 @@ pi install git:github.com/Tiancaizhi9098/pi-goal-retry
     "enabled": true,
     "maxRetries": 10,
     "baseDelayMs": 10000,
-    "maxDelayMs": 120000
+    "maxDelayMs": 10000
   }
 }
 ```
 
 请把这些字段合并到现有配置。原来的自动响应次数上限、无进展保护和 Token 预算仍然生效，可能比重试次数先达到。
+
+`maxDelayMs` 保留用于兼容旧配置，重试间隔固定使用 `baseDelayMs`。通过 Git 安装时，若需要 Pi 原生重试也固定为 10 秒，在 `~/.pi/agent/settings.json` 的 `retry` 中合并 `"baseDelayMs": 10000` 和 `"maxAgentDelayMs": 10000`，然后 `/reload`。
 
 ## Windows 本地复制安装与回退
 

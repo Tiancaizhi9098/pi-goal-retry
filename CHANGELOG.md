@@ -1,5 +1,11 @@
 # Changelog
 
+## [0.55.0-retry.3] - 2026-11-11
+
+- Use a fixed ten-second recovery interval for every retry, including configurations saved by earlier versions.
+- Configure Pi native retry delays to the same ten-second interval when using the Windows installer.
+- Preserve the ten-retry cap, persistence, manual pause and token-budget controls.
+
 ## [0.55.0-retry.2] - 2026-11-11
 
 - Fix immediate pause when an Antigravity premature-reply error accompanies Gemini's filter message.

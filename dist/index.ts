@@ -45,7 +45,7 @@ import {
   transitionGoal,
   usageLimitScope,
   validateObjective
-} from "./chunks/chunk-J3Q4NDPO.ts";
+} from "./chunks/chunk-4GPHBDCR.ts";
 import {
   DEFAULT_GOAL_SETTINGS,
   currentTokenTotal,
@@ -61,12 +61,12 @@ import {
   safeGoalMenuText,
   safeTerminalText,
   truncateNotification
-} from "./chunks/chunk-KISYAXXD.ts";
+} from "./chunks/chunk-75P3LG2T.ts";
 
 // src/command-registration.ts
 function registerGoalCommand(pi, runtime, commands, options = {}) {
-  const loadGoalManager = cachedModuleLoader(options.loadGoalManager ?? (() => import("./chunks/menu-KJITNDTV.ts")));
-  const loadGoalSettings = cachedModuleLoader(options.loadGoalSettings ?? (() => import("./chunks/settings-ui-VCH2FDEW.ts")));
+  const loadGoalManager = cachedModuleLoader(options.loadGoalManager ?? (() => import("./chunks/menu-L6NI7YBX.ts")));
+  const loadGoalSettings = cachedModuleLoader(options.loadGoalSettings ?? (() => import("./chunks/settings-ui-4SL36NX7.ts")));
   pi.registerCommand("goal", {
     description: "Run a goal to completion: /goal [--tokens 100k] <goal_to_complete>",
     getArgumentCompletions: (prefix) => completeGoalArguments(prefix),

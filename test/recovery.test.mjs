@@ -35,8 +35,10 @@ test("assistant output cannot misclassify a premature-reply error as an authenti
     content:[{type:"text",text:"The UI displays 401 Unauthorized, permission denied and invalid request labels."}]}),"retry");
 });
 
-test("backoff grows from 10 seconds to a 120-second cap", () => {
-  assert.deepEqual([1,2,3,4,5,10].map(n => providerRetryDelay(DEFAULT_GOAL_SETTINGS.providerRetry,n)), [10_000,20_000,40_000,80_000,120_000,120_000]);
+test("every retry waits ten seconds, including settings saved by the previous exponential version", () => {
+  for(const settings of [DEFAULT_GOAL_SETTINGS.providerRetry,{...DEFAULT_GOAL_SETTINGS.providerRetry,maxDelayMs:120_000}]) {
+    assert.deepEqual([1,2,3,4,5,10].map(n => providerRetryDelay(settings,n)), [10_000,10_000,10_000,10_000,10_000,10_000]);
+  }
 });
 
 test("an unclassified failure schedules one retry and dispatches only when the deadline arrives", async t => {
@@ -81,7 +83,7 @@ test("native retries use the same failure counter before fallback recovery", asy
   await h.emit("agent_settled");
   assert.equal(h.runtime.activeGoal.providerRetryFailures, 4);
   assert.equal(h.runtime.activeGoal.waiting.providerError.attempt, 4);
-  assert.equal(h.runtime.activeGoal.waiting.resumeAt, Date.now()+80_000);
+  assert.equal(h.runtime.activeGoal.waiting.resumeAt, Date.now()+10_000);
 });
 
 test("a successful response resets consecutive failures", async t => {

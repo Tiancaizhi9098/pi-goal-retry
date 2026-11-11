@@ -18,7 +18,7 @@ export const DEFAULT_PROVIDER_RETRY: ProviderRetrySettings = {
   enabled: true,
   maxRetries: 10,
   baseDelayMs: 10_000,
-  maxDelayMs: 120_000,
+  maxDelayMs: 10_000,
 };
 
 export interface GoalSettings {

@@ -15,8 +15,8 @@ export function providerErrorDisposition(message: AssistantMessageLike): Provide
   return permanentError.test(error) ? "permanent" : "retry";
 }
 
-export function providerRetryDelay(settings: ProviderRetrySettings, attempt: number): number {
-  return Math.min(settings.maxDelayMs, settings.baseDelayMs * 2 ** Math.min(30, Math.max(0, attempt - 1)));
+export function providerRetryDelay(settings: ProviderRetrySettings, _attempt: number): number {
+  return settings.baseDelayMs;
 }
 
 /** Uses Goal's existing persisted wait and single-flight dispatcher, never a parallel model loop. */

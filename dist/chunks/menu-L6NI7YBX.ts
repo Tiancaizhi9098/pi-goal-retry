@@ -3,13 +3,13 @@
 import {
   goalSummary,
   parseTokenBudget
-} from "./chunk-J3Q4NDPO.ts";
+} from "./chunk-4GPHBDCR.ts";
 import {
   formatDuration,
   formatTokenCount,
   notifyTerminal,
   safeGoalMenuText
-} from "./chunk-KISYAXXD.ts";
+} from "./chunk-75P3LG2T.ts";
 
 // src/menu.ts
 var GOAL_MENU_ACTIONS = {

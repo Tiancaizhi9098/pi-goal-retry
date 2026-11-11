@@ -17,7 +17,7 @@ import {
   safeGoalMenuText,
   truncateNotification,
   updateGoalUsage
-} from "./chunk-KISYAXXD.ts";
+} from "./chunk-75P3LG2T.ts";
 
 // src/command.ts
 var MAX_OBJECTIVE_LENGTH = 4e3;
@@ -930,8 +930,8 @@ function providerErrorDisposition(message) {
   const permanentError = /\b(?:401|403)\b|invalid[_ -]?api[_ -]?key|authentication (?:failed|required)|unauthorized|permission denied|invalid[_ -]?request|invalid argument|unsupported (?:model|parameter)|model (?:not found|does not exist)/i;
   return permanentError.test(error) ? "permanent" : "retry";
 }
-function providerRetryDelay(settings, attempt) {
-  return Math.min(settings.maxDelayMs, settings.baseDelayMs * 2 ** Math.min(30, Math.max(0, attempt - 1)));
+function providerRetryDelay(settings, _attempt) {
+  return settings.baseDelayMs;
 }
 var ProviderErrorRecovery = class {
   constructor(runtime) {

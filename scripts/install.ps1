@@ -50,8 +50,11 @@ $settings.packages = $packages.ToArray()
 if (-not $goalSettings.ContainsKey('providerRetry')) { $goalSettings.providerRetry = @{} }
 $goalSettings.providerRetry.enabled = $true
 $goalSettings.providerRetry.maxRetries = $MaxRetries
-if (-not $goalSettings.providerRetry.ContainsKey('baseDelayMs')) { $goalSettings.providerRetry.baseDelayMs = 10000 }
-if (-not $goalSettings.providerRetry.ContainsKey('maxDelayMs')) { $goalSettings.providerRetry.maxDelayMs = 120000 }
+$goalSettings.providerRetry.baseDelayMs = 10000
+$goalSettings.providerRetry.maxDelayMs = 10000
+if (-not $settings.ContainsKey('retry')) { $settings.retry = @{} }
+$settings.retry.baseDelayMs = 10000
+$settings.retry.maxAgentDelayMs = 10000
 
 function Save-JsonAtomically([string]$Path, $Value) {
     $temporaryPath = $Path + '.pi-goal-retry-' + [guid]::NewGuid().ToString('N') + '.tmp'

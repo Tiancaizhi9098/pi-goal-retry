@@ -197,7 +197,7 @@ var DEFAULT_PROVIDER_RETRY = {
   enabled: true,
   maxRetries: 10,
   baseDelayMs: 1e4,
-  maxDelayMs: 12e4
+  maxDelayMs: 1e4
 };
 var DEFAULT_GOAL_SETTINGS = {
   providerRetry: DEFAULT_PROVIDER_RETRY,

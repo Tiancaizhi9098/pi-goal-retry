@@ -6,7 +6,7 @@ import {
   notifyTerminal,
   safeTerminalText,
   saveGoalSettings
-} from "./chunk-KISYAXXD.ts";
+} from "./chunk-75P3LG2T.ts";
 
 // src/settings-ui.ts
 import { join } from "node:path";

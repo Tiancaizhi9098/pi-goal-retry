@@ -26,7 +26,7 @@ test("real Pi retries the pasted Gemini/Antigravity failure, respects pause, and
   const temp = await mkdtemp(resolve(scratch,"pi-goal-retry-sdk-"));
   const settingsPath = resolve(temp,"pi-goal.json");
   await writeFile(settingsPath,JSON.stringify({providerRetry:{maxRetries:10}}));
-  const settingsManager = sdk.SettingsManager.inMemory({retry:{enabled:false},compaction:{enabled:false}});
+  const settingsManager = sdk.SettingsManager.inMemory({retry:{enabled:false,baseDelayMs:10_000,maxAgentDelayMs:10_000},compaction:{enabled:false}});
   const modelRuntime = await sdk.ModelRuntime.create({credentials:AuthStorage.inMemory(),modelsPath:null,refreshOnCreate:false,modelsStorePath:resolve(temp,"models-cache.json")});
   modelRuntime.registerProvider("local-retry-test",{
     api:"openai-completions",baseUrl:"http://127.0.0.1:1/unused",apiKey:"local-test-only",
@@ -47,6 +47,8 @@ test("real Pi retries the pasted Gemini/Antigravity failure, respects pause, and
     await rm(temp,{recursive:true,force:true});
   });
   assert.deepEqual(extensionsResult.errors,[]);
+  const nativeDelays=[];
+  session.subscribe(event=>{ if(event.type==="auto_retry_start") nativeDelays.push(event.delayMs); });
   let calls=0;
   let currentError=truncation;
   let responseText=geminiFilterText;
@@ -71,7 +73,7 @@ test("real Pi retries the pasted Gemini/Antigravity failure, respects pause, and
   t.mock.timers.tick(10_000);
   await flushUntil(()=>calls===2&&currentGoal()?.waiting?.providerError?.attempt===2);
   assert.equal(calls,2);
-  assert.equal(currentGoal().waiting.resumeAt,Date.now()+20_000);
+  assert.equal(currentGoal().waiting.resumeAt,Date.now()+10_000);
   await session.prompt("/goal pause");
   t.mock.timers.tick(500_000);
   await yieldImmediate();
@@ -86,12 +88,14 @@ test("real Pi retries the pasted Gemini/Antigravity failure, respects pause, and
   await session.prompt("/goal Verify the shared retry cap with native Pi retries enabled");
   await flushUntil(()=>calls>2);
   for(let tick=0;tick<80&&currentGoal()?.status==="active";tick++) {
-    t.mock.timers.tick(120_000);
+    t.mock.timers.tick(10_000);
     await yieldImmediate();
   }
   await flushUntil(()=>currentGoal()?.status==="paused");
   assert.equal(calls,13,"initial request plus exactly ten retries; native retries must not multiply the allowance");
   assert.equal(currentGoal().providerRetryFailures,11);
+  assert.ok(nativeDelays.length>0);
+  assert.ok(nativeDelays.every(delay=>delay===10_000));
 
   // Reproduce the complete pasted failure for an entire recovery allowance.
   settingsManager.setRetryEnabled(false);
@@ -101,7 +105,7 @@ test("real Pi retries the pasted Gemini/Antigravity failure, respects pause, and
   await session.prompt("/goal Verify bounded recovery of the pasted Gemini and Antigravity failure");
   await flushUntil(()=>calls===14&&!!currentGoal()?.waiting?.providerError);
   for(let tick=0;tick<80&&currentGoal()?.status==="active";tick++) {
-    t.mock.timers.tick(120_000);
+    t.mock.timers.tick(10_000);
     await yieldImmediate();
   }
   await flushUntil(()=>currentGoal()?.status==="paused");

@@ -1,6 +1,6 @@
 {
   "name": "pi-goal-retry",
-  "version": "0.55.0-retry.2",
+  "version": "0.55.0-retry.3",
   "description": "Pi goal completion with persistent bounded retries after upstream failures, based on @narumitw/pi-goal.",
   "type": "module",
   "private": true,
